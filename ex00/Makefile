@@ -18,5 +18,8 @@ $(NAME): $(OBJS)
 
 clean:
 	rm -f $(OBJS) $(NAME)
+fclean: clean
+	rm -f $(OBJS)
+re: fclean all
 
-.PHONY: all clean
+.PHONY: all clean fclean re

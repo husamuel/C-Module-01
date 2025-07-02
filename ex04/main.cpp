@@ -1,71 +1,49 @@
 #include <iostream>
-#include <string>
 #include <fstream>
-#include <cstdio>
-#include <cstdlib>
+#include <string>
 
-std::string my_replace(std::string buffer, const std::string search, const std::string replace)
+std::string replace_all(std::string text, const std::string& search, const std::string& replace)
 {
-	size_t	erase_length = search.length();
-	size_t	replace_length = replace.length();
-	size_t	pos_search = 0;
-
-	pos_search = buffer.find(search);
-	while (pos_search != std::string::npos)
+    size_t pos = text.find(search, pos);
+	while (pos != std::string::npos)
 	{
-		buffer.erase(pos_search, erase_length);
-		buffer.insert(pos_search, replace);
-		pos_search = buffer.find(search, pos_search + replace_length);
+		text.replace(pos, search.length(), replace);
+		pos = text.find(search, pos + replace.length());
 	}
-	return (buffer);
+    return text;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char* argv[])
 {
-	if (argc != 4)
+    if (argc != 4)
 	{
-		std::cout << "wrong number of arguments" << std::endl <<
-		"Usage:\t./replace <file_name> <search> <replace>" << std::endl;
-	}
-	else
-	{
-		const std::string filename = argv[1];
-		const std::string	search = argv[2];
-		const std::string	replace = argv[3];
-		std::string			buffer;
-		std::ifstream		infile;
-		std::ofstream		outfile;
+        std::cerr << "Usage: ./replace <filename> <search> <replace>\n";
+        return 1;
+    }
 
-		infile.open(argv[1]);
-		if (infile.is_open() == true)
-		{
-			outfile.open(filename + ".replace", std::ios::out | std::ios::trunc ); //only works on macOS with the +, to make it work on Linux, comment out "filename +"
-			if (outfile.is_open() == true)
-			{
-				while (std::getline(infile, buffer))
-				{
-					buffer = my_replace(buffer, search, replace);
-					outfile << buffer;
-					if (infile.peek() != EOF)
-						outfile << std::endl;
-				}
-				outfile.close();
-			}
-			else
-			{
-				std::perror("Outfile Error");
-				infile.close();
-				return (EXIT_FAILURE);
-			}
-			infile.close();
-		}
-		else
-		{
-			std::perror("Infile Error");
-			std::cout << "Outfile not created or truncated." << std::endl;
-			return (EXIT_FAILURE);
-		}
-		return (EXIT_SUCCESS);
-	}
-	return (EXIT_FAILURE);
+    std::string filename = argv[1];
+    std::string search = argv[2];
+    std::string replace = argv[3];
+
+    std::ifstream infile(filename);
+    if (!infile)
+	{
+        std::cerr << "Error opening input file.\n";
+        return 1;
+    }
+
+    std::ofstream outfile(filename + ".replace");
+    if (!outfile)
+	{
+        std::cerr << "Error creating output file.\n";
+        return 1;
+    }
+
+    std::string line;
+    while (std::getline(infile, line))
+	{
+        outfile << replace_all(line, search, replace) << '\n';
+    }
+
+    return 0;
 }

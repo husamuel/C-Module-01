@@ -2,48 +2,70 @@
 #include <fstream>
 #include <string>
 
-std::string replace_all(std::string text, const std::string& search, const std::string& replace)
+int	printError(int err)
 {
-    size_t pos = text.find(search, pos);
-	while (pos != std::string::npos)
-	{
-		text.replace(pos, search.length(), replace);
-		pos = text.find(search, pos + replace.length());
-	}
-    return text;
+	if (err == 0)
+		std::cerr << "Error : wrong number of arguments, use ./replace file s1 s2" << std::endl;
+	else if (err == 1)
+		std::cerr << "Error : input file" << std::endl;
+	else if (err == 2)
+		std::cerr << "Error : output file" << std::endl;
+	return (1);
 }
 
-int main(int argc, char* argv[])
+void	replaceStrings(std::ofstream &fileOut, std::string s1, std::string s2, std::string input)
 {
-    if (argc != 4)
+	size_t	pos;
+	size_t	toSkip;
+
+	pos = input.find(s1);
+	if (pos == std::string::npos)
 	{
-        std::cerr << "Usage: ./replace <filename> <search> <replace>\n";
-        return 1;
-    }
-
-    std::string filename = argv[1];
-    std::string search = argv[2];
-    std::string replace = argv[3];
-
-    std::ifstream infile(filename);
-    if (!infile)
+		fileOut << input;
+		return ;
+	}
+	else
 	{
-        std::cerr << "Error opening input file.\n";
-        return 1;
-    }
+		fileOut << input.substr(0, pos);
+		fileOut << s2;
+		toSkip = pos + s1.length();
+		replaceStrings(fileOut, s1, s2, input.substr(toSkip));
+	}
+}
 
-    std::ofstream outfile(filename + ".replace");
-    if (!outfile)
+int	main(int argc, char **argv)
+{
+	std::ifstream	fileIn;
+	std::ofstream	fileOut;
+	std::string		s1;
+	std::string		s2;
+	std::string		buff;
+	std::string		file;
+	std::string		fileReplace;
+
+	if (argc != 4)
+		return (printError(0));
+	
+	s1 = argv[2];
+	s2 = argv[3];
+	
+	file = argv[1];
+	fileIn.open(file.c_str());
+	if (fileIn.good() == false)
+		return (printError(1));
+	
+	fileReplace = file + ".replace";
+	fileOut.open(fileReplace.c_str());
+	if (fileOut.good() == false)
 	{
-        std::cerr << "Error creating output file.\n";
-        return 1;
-    }
+		fileIn.close();
+		return (printError(2));
+	}
 
-    std::string line;
-    while (std::getline(infile, line))
-	{
-        outfile << replace_all(line, search, replace) << '\n';
-    }
-
-    return 0;
+	while (getline(fileIn, buff))
+		replaceStrings(fileOut, s1, s2, buff + '\n');
+	
+	fileIn.close();
+	fileOut.close();
+	return (0);
 }
